@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <winsock2.h>
 #include <string.h>
-#include <windows.h>
 
 #define LIMIT 100
 
@@ -56,5 +55,6 @@ int main(int argc, char *argv[])
     }
     shutdown(temp_sock, SD_BOTH);
     closesocket(temp_sock);
+    closesocket(s);
     WSACleanup();
 }
