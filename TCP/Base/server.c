@@ -44,6 +44,9 @@ int main(int argc, char *argv[])
     // Once WSA is up, We can create the sockets.
     // INVALID_SOCKET is a field, defined in Winsock2.h
     // We can use this to check for invalid sockets.
+    // SOCK_STREAM means TCP connection.
+    // socket(int AddressFamily, int type, int protocol)
+    // we use 0 as protocol, as we do not wish to specify a protocol
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
     {
         printf("[SERVER] Could not create socket : %d\n", WSAGetLastError());
