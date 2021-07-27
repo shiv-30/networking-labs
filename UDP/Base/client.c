@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
     msg = "HelloWorld";
     message_length = strlen(msg);
-    c = sizeof(server);
+    c = sizeof(struct sockaddr_in);
     if (sendto(s, msg, message_length, 0, (struct sockaddr *)&server, c) == SOCKET_ERROR)
     {
         printf("sendto() failed with error code : %d", WSAGetLastError());

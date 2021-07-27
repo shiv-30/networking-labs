@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     while (1)
     {
 
-        c = sizeof(client);
+        c = sizeof(struct sockaddr_in);
         // c will have the size of the client address datastructure
         msg = (char *)calloc(LIMIT, sizeof(char));
         /// allocating fresh memory for the message
