@@ -30,7 +30,10 @@ int main(int argc, char *argv[])
     SOCKET s;
     struct sockaddr_in server;
     int c, rsize;
+    // the part above is the same as the server, so refer to that.
     char servermsg[LIMIT];
+    // servermsg will store the message from the server.
+    // the part below is same too.
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
     {
         printf("[CLIENT] Failed. Error Code : %d\n", WSAGetLastError());
@@ -42,15 +45,23 @@ int main(int argc, char *argv[])
         return 1;
     }
     printf("[CLIENT] All checks passed, Socket created.\n");
+    // now, we define the address and port of the server we will connect to.
+    // in my case, my LAN IP is 192.168.0.2, so I use it here
     server.sin_addr.s_addr = inet_addr("192.168.0.2");
     server.sin_family = AF_INET;
     server.sin_port = htons(atoi(argv[1]));
+    // port assign same as done in server
+    // connect function will make the client send a connection request to the server.
+    // This is then accepted by the accept() in server.
+    // Since this is TCP, we need to do this.
     if (connect(s, (struct sockaddr *)&server, sizeof(server)) == SOCKET_ERROR)
     {
         printf("[CLIENT] Connection failed with error code : %d\n", WSAGetLastError());
         return 1;
     }
     printf("[CLIENT] Connected... awaiting message\n");
+    // recv receives a message from the connection
+    // recv(socket server, char* stringBufferToStoreMessageIn, int limitOfCharacters)
     if ((rsize = recv(s, servermsg, LIMIT, 0)) == SOCKET_ERROR)
     {
         printf("[CLIENT] Receiving failed with error code : %d\n", WSAGetLastError());
@@ -58,6 +69,7 @@ int main(int argc, char *argv[])
     }
 
     puts("[CLIENT] Reply received\n");
+    // JOB done, so time to shutdown
     shutdown(s, SD_BOTH);
     closesocket(s);
     //Add a NULL terminating character to make it a proper string before printing
@@ -66,6 +78,7 @@ int main(int argc, char *argv[])
 
     if (WSACleanup() == SOCKET_ERROR)
     {
+        // Ah yes, cleanup
         printf("Error in Windows Sockets DLL Cleanup!");
         return 1;
     }
