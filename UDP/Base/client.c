@@ -29,14 +29,13 @@ int main(int argc, char *argv[])
     WSADATA wsa;
     SOCKET s;
     struct sockaddr_in server;
-    int c, rsize;
-    char servermsg[LIMIT];
+    int c, message_length;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
     {
         printf("[CLIENT] Failed. Error Code : %d\n", WSAGetLastError());
         return 1;
     }
-    if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+    if ((s = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
     {
         printf("[CLIENT] Could not create socket : %d\n", WSAGetLastError());
         return 1;
@@ -45,24 +44,31 @@ int main(int argc, char *argv[])
     server.sin_addr.s_addr = inet_addr("192.168.0.2");
     server.sin_family = AF_INET;
     server.sin_port = htons(atoi(argv[1]));
-    if (connect(s, (struct sockaddr *)&server, sizeof(server)) == SOCKET_ERROR)
-    {
-        printf("[CLIENT] Connection failed with error code : %d\n", WSAGetLastError());
-        return 1;
-    }
     printf("[CLIENT] Connected... awaiting message\n");
-    if ((rsize = recv(s, servermsg, LIMIT, 0)) == SOCKET_ERROR)
+
+    msg = "HelloWorld";
+    message_length = strlen(msg);
+    c = sizeof(server);
+    if (sendto(s, msg, message_length, 0, (struct sockaddr *)&server, c) == SOCKET_ERROR)
     {
-        printf("[CLIENT] Receiving failed with error code : %d\n", WSAGetLastError());
+        printf("sendto() failed with error code : %d", WSAGetLastError());
         return 1;
     }
+    free(msg);
+    // just freeing the message space and allocating new space as memset was causing troubles.
 
-    puts("[CLIENT] Reply received\n");
+    msg = (char *)calloc(LIMIT, sizeof(char));
+
+    if ((message_length = recvfrom(s, msg, LIMIT, 0, (struct sockaddr *)&server, &c)) == SOCKET_ERROR)
+    {
+        printf("recvfrom() failed with error code : %d", WSAGetLastError());
+        return 1;
+    }
     shutdown(s, SD_BOTH);
     closesocket(s);
     //Add a NULL terminating character to make it a proper string before printing
-    servermsg[rsize] = '\0';
-    puts(servermsg);
+    msg[message_length] = '\0';
+    puts(msg);
 
     if (WSACleanup() == SOCKET_ERROR)
     {

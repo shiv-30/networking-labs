@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
     // SOCK_STREAM means TCP connection.
     // socket(int AddressFamily, int type, int protocol)
     // we use 0 as protocol, as we do not wish to specify a protocol
+    // and yeah, AF_INET = IPv4, AF_INET6 = IPv6, SOCK_STREAM = TCP, SOCK_DGRAM = UDP
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
     {
         printf("[SERVER] Could not create socket : %d\n", WSAGetLastError());
@@ -102,6 +103,7 @@ int main(int argc, char *argv[])
         // just to display which client we got connection from.
         //Reply to client
         msg = "Welcome to BetterNetworkThanYourISP";
+        // send(seocket connectedSocket, char* messageBuffer, int lengthOfMessage, int flags)
         send(temp_sock, msg, strlen(msg), 0);
         // Just sending a message to the client...
         // closing the temp_sock socket, as it has served it's purpose.

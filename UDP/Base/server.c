@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <winsock2.h>
 #include <string.h>
+#define LIMIT 100
 
 int main(int argc, char *argv[])
 {
@@ -25,17 +26,21 @@ int main(int argc, char *argv[])
 
         //This entire IF block is just to handle if no port number is specified during execution
     }
+
+    // MOST OF THE STUFF HERE IS SAME AS THE TCP, UNLESS SPECIFIED.
     char *msg;
     WSADATA wsa;
-    SOCKET s, temp_sock;
+    SOCKET s;
     struct sockaddr_in server, client;
-    int c;
+    int c, message_length;
+
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
     {
         printf("[SERVER] Failed. Error Code : %d\n", WSAGetLastError());
         return 1;
     }
-    if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+    // Now, we use SOCK_DGRAM here as we are making UDP connection
+    if ((s = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
     {
         printf("[SERVER] Could not create socket : %d\n", WSAGetLastError());
         return 1;
@@ -49,26 +54,39 @@ int main(int argc, char *argv[])
         return 1;
     }
     printf("[SERVER] All checks passed, Socket created and bound.\n");
-    listen(s, 2);
     printf("[SERVER] Ready for connections.\n");
+    // now, after bind, we do not listen in this one. as this is NOT a connection based socket.
     while (1)
     {
-        c = sizeof(struct sockaddr_in);
-        temp_sock = accept(s, (struct sockaddr *)&client, &c);
-        if (temp_sock == INVALID_SOCKET)
+
+        c = sizeof(client);
+        // c will have the size of the client address datastructure
+        msg = (char *)calloc(LIMIT, sizeof(char));
+        /// allocating fresh memory for the message
+        // recvfrom is used to receive messages in non-connection based sockets.
+        // recvfrom(socket server, char* bufferToStoreMessage, int lengthOfMessage,int flags, sockaddr whereClientDetailsWillBeStored, int sizeOfClientDataStruct)
+        if ((message_length = recvfrom(s, msg, LIMIT, 0, (struct sockaddr *)&client, &c)) == SOCKET_ERROR)
         {
-            printf("[SERVER] Accept failed with error code : %d\n", WSAGetLastError());
-            continue;
+            printf("recvfrom() failed with error code : %d", WSAGetLastError());
+            return 1;
         }
 
-        printf("[SERVER] Connection accepted from Client [%s:%d]\n", inet_ntoa(client.sin_addr), client.sin_port);
-        //Reply to client
-        msg = "Welcome to BetterNetworkThanYourISP";
-        send(temp_sock, msg, strlen(msg), 0);
+        printf("Received packet from %s:%d\n", inet_ntoa(client.sin_addr), client.sin_port);
+        printf("Data: %s\n", msg);
 
-        // getchar();
-        shutdown(temp_sock, SD_BOTH);
-        closesocket(temp_sock);
+        memset(msg, '\0', LIMIT);
+        msg = "WELCOME TO UDP NEtwrks";
+        message_length = strlen(msg);
+        // now, we send something back to the client, because..
+        // khali haate ferate nei
+        // we used the sendto() function to send data in a udp based connection.
+        // sendto(Socket server, char* bufferOfMessage, int MessageLength, int flags, sockaddr AddressOfClientToWhomWeAreSending, int sizeOfTheClientAddressDataStruct)
+        if (sendto(s, msg, message_length, 0, (struct sockaddr *)&client, c) == SOCKET_ERROR)
+        {
+            printf("sendto() failed with error code : %d", WSAGetLastError());
+            return 1;
+        }
+        free(msg);
     }
     shutdown(s, SD_BOTH);
     closesocket(s);
